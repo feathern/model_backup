@@ -1496,7 +1496,7 @@ def check_endian(fd,sig,sigtype):
     else:
         return True
 
-def build_file_list(istart,iend,path = '.',diter = -1,ndig = 8):
+def build_file_list(istart,iend,path = '.',diter = -1,ndig = 8,silent=False,nopath=False):
     """
     Rayleigh file listing routine.  Returns a list of numbered files in the range istart:iend.
     
@@ -1520,7 +1520,9 @@ def build_file_list(istart,iend,path = '.',diter = -1,ndig = 8):
 
     """
     files = []
-    
+    opath = path+'/'
+    if (nopath):
+        opath=''
     if (diter < 1):
         # Examine the directory and grab all files that fall between istart and iend
         allfiles = os.listdir(path)
@@ -1530,16 +1532,17 @@ def build_file_list(istart,iend,path = '.',diter = -1,ndig = 8):
             try:
                 fint = int(f)
                 if ( (fint >= istart ) and (fint <= iend)  ):
-                    files.append(path+'/'+f)
+                    files.append(opath+f)
             except:
-                print("Skipping ",f+'.  Unable to convert to integer.')
+                if (not silent):
+                    print("Skipping ",f+'.  Unable to convert to integer.')
     else:
         # Generate filename manually (no ls)
         i = istart
         digmod = "%0"+str(ndig)+"d"
         while (i <= iend):
             fiter = digmod % i           
-            files.append(path+'/'+fiter)
+            files.append(opath+fiter)
             i = i+diter
             
     return files

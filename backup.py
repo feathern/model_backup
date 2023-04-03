@@ -3,10 +3,18 @@ from rayleigh_diagnostics import build_file_list
 class output_desc:
     def __init__(self):
         self.tar = False
-        self.copy=True
-        self.count = -1
+        self.count = 0
         self.sample = 'dense' # or 'distributed' or 'both'
 
+def gen_dict():
+    dirs = ['AZ_Avgs', 'Benchmark_Reports', 'Equatorial_Slices', 
+            'G_Avgs', 'Meridional_Slices', 'Point_Probes', 'Shell_Avgs', 
+            'Shell_Slices', 'Shell_Spectra', 'SPH_Modes', 'Timings', 'Checkpoints']
+    qdict = {}
+    for d in dirs:
+        qdict[d]=output_desc()
+    return qdict
+            
 
 def sparse_sample(ifiles,count):
     nfiles = len(ifiles)
@@ -44,11 +52,13 @@ def sparse_sample(ifiles,count):
 
 
 def backup(idir,odir,qdict,imax=99999999,imin=0,check=False, verbose = False):
-    dirs = ['AZ_Avgs', 'Benchmark_Reports', 'Equatorial_Slices', 'G_Avgs', 'Meridional_Slices', 'Points_Probes', 'Shell_Avgs', 'Shell_Slices', 'Shell_Spectra', 'SPH_Modes', 'Timings']
+    dirs = ['AZ_Avgs', 'Benchmark_Reports', 'Equatorial_Slices', 
+            'G_Avgs', 'Meridional_Slices', 'Point_Probes', 'Shell_Avgs', 
+            'Shell_Slices', 'Shell_Spectra', 'SPH_Modes', 'Timings']
 
     print('Backing up from: ',idir,' to: ', odir)
 
-    dirs = ['G_Avgs', 'Shell_Avgs', 'Shell_Slices']
+   
 
     misc_files = ['equation_coefficients', 'grid_info', 'jobinfo.txt', 'main_input']
     
@@ -95,9 +105,13 @@ def backup(idir,odir,qdict,imax=99999999,imin=0,check=False, verbose = False):
         print('\n\nBacking up directory: ', d, end='\n\n')
         qinfo = qdict[d]
         
-        data_dir = idir+'/'+d    
-        ifiles = build_file_list(imin,imax,path=data_dir)
-        nfiles = len(ifiles)
+        data_dir = idir+'/'+d
+        try:
+            ifiles = build_file_list(imin,imax,path=data_dir)
+            nfiles = len(ifiles)
+        except:
+            print('Skipping directory '+d+'.  No files found.')
+            nfiles = 0
         
         count = qinfo.count
         if (type(count) == type(1)):
@@ -109,8 +123,8 @@ def backup(idir,odir,qdict,imax=99999999,imin=0,check=False, verbose = False):
                 if ((count[i] > nfiles) or (count[i] == -1)):
                     count[i] = nfiles
                     
-            dense_count = count[0]
-            sparse_count = count[1]
+            dense_count = count[1]
+            sparse_count = count[0]
             count=max(dense_count,sparse_count)
             
         if (count > 0):
@@ -156,7 +170,7 @@ def backup(idir,odir,qdict,imax=99999999,imin=0,check=False, verbose = False):
                 cmds.append(tar_cmd)
                 cmds.append(rm_cmd)
                 
-            if (qinfo.copy):
+            else:
                 dest_dir = odir+'/'+d
                 mkdir2 = 'mkdir '+dest_dir
                 cmds.append(mkdir2)
